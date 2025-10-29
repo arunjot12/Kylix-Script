@@ -69,7 +69,35 @@ async function main() {
 
   await sleep(2000);
 
-  // Step 2: Process each asset
+  // Step 2: Set base asset (USD - asset ID 1)
+  console.log(`\n${'='.repeat(60)}`);
+  console.log(`🏛️  Setting Base Asset (USD - ID 1)`);
+  console.log(`${'='.repeat(60)}`);
+  
+  const baseAssetId = 1; // USD
+  const updateBaseAssetTx = api.tx.lending.updateBaseAsset({ WithId: baseAssetId });
+  const sudoUpdateBaseAssetTx = api.tx.sudo.sudo(updateBaseAssetTx);
+
+  await new Promise<void>((resolve, reject) => {
+    sudoUpdateBaseAssetTx.signAndSend(admin, { nonce: nonce++ }, ({ status, dispatchError }) => {
+      if (dispatchError) {
+        if (dispatchError.isModule) {
+          const decoded = api.registry.findMetaError(dispatchError.asModule);
+          console.error(`❌ Base asset update failed: ${decoded.section}.${decoded.name}`);
+        } else {
+          console.error(`❌ Base asset update failed: ${dispatchError.toString()}`);
+        }
+        reject(dispatchError);
+      } else if (status.isInBlock) {
+        console.log(`✅ Base asset set to USD (ID ${baseAssetId}) in block ${status.asInBlock}`);
+        resolve();
+      }
+    });
+  });
+
+  await sleep(2000);
+
+  // Step 3: Process each asset
   for (const asset of assets) {
     try {
       console.log(`\n${'='.repeat(60)}`);
