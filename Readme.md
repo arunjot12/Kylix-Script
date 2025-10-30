@@ -1,3 +1,3 @@
 Run this command with file name
 
-npx ts-node --esm 
+npx ts-node --esm full-final-setup.ts
